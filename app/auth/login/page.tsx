@@ -1,159 +1,111 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FaEnvelope, FaLock } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.redirectUrl) {
-          toast.error('Lütfen email adresinizi doğrulayın');
-          router.push(data.redirectUrl);
-          return;
-        }
-        throw new Error(data.error || 'Giriş sırasında bir hata oluştu');
-      }
-
-      toast.success('Giriş başarılı!');
-      router.push('/dashboard');
+      await login(email, password);
+      toast.success('Başarıyla giriş yapıldı');
+      router.push(role ? `/dashboard/${role}` : '/');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-gray-800 p-8 rounded-xl shadow-lg">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm">
+        <div>
+          <h2 className="text-center text-3xl font-bold text-gray-800">
             Giriş Yap
           </h2>
-          <p className="mt-2 text-gray-400">
-            Hesabınıza giriş yaparak devam edin
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Hesabınız yok mu?{' '}
+            <Link
+              href={role ? `/auth/register?role=${role}` : '/auth/register'}
+              className="font-medium text-emerald-600 hover:text-emerald-500"
+            >
+              Hemen kayıt olun
+            </Link>
           </p>
-        </motion.div>
-
-        <motion.form
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-6"
-        >
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Adresi
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaEnvelope />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Email adresi"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="ornek@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
-
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Şifre
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaLock />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Şifre"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                />
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link
+                href="/auth/forgot-password"
+                className="font-medium text-emerald-600 hover:text-emerald-500"
+              >
+                Şifremi Unuttum
+              </Link>
             </div>
           </div>
 
           <div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-150"
             >
               {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </motion.button>
+            </button>
           </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <Link 
-              href="/auth/forgot-password" 
-              className="text-blue-400 hover:text-blue-300 transition-colors duration-150"
-            >
-              Şifremi unuttum
-            </Link>
-            <Link 
-              href="/auth/register" 
-              className="text-blue-400 hover:text-blue-300 transition-colors duration-150"
-            >
-              Hesap oluştur
-            </Link>
-          </div>
-        </motion.form>
+        </form>
       </div>
     </div>
   );

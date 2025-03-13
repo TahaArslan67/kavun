@@ -1,20 +1,26 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { Schema } from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
   name: {
     type: String,
-    required: [true, 'Ad Soyad alanı zorunludur'],
-    minlength: [2, 'Ad Soyad en az 2 karakter olmalıdır'],
-    trim: true
+    required: [true, 'Ad alanı zorunludur'],
+    trim: true,
+    minlength: [2, 'Ad en az 2 karakter olmalıdır'],
+    maxlength: [50, 'Ad en fazla 50 karakter olabilir']
   },
   email: {
     type: String,
-    required: [true, 'E-posta alanı zorunludur'],
+    required: [true, 'Email alanı zorunludur'],
     unique: true,
     trim: true,
     lowercase: true,
-    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Geçerli bir e-posta adresi giriniz']
+    validate: {
+      validator: function(v: string) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Geçerli bir email adresi giriniz'
+    }
   },
   password: {
     type: String,
@@ -34,30 +40,28 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
+  resetPasswordCode: {
+    type: String,
+    select: false
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  strict: true,
+  strictQuery: true
+});
 
-// Şifre karşılaştırma metodu
-userSchema.methods.comparePassword = async function(candidatePassword: string) {
-  try {
-    const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    return isMatch;
-  } catch (error) {
-    return false;
-  }
-};
+// Email için index oluştur
+userSchema.index({ email: 1 }, { unique: true });
 
-// Doğrulama kodunun geçerli olup olmadığını kontrol et
-userSchema.methods.isVerificationCodeValid = function(code: string): boolean {
-  return (
-    this.verificationCode === code &&
-    this.verificationCodeExpires > new Date()
-  );
-};
-
+// Modeli oluşturmadan önce koleksiyonun varlığını kontrol et
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default User;

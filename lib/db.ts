@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://arslantaha67:00228t@panel.gjn1k.mongodb.net/MDB?retryWrites=true&w=majority&appName=Panel';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error('MongoDB bağlantı adresi bulunamadı. Lütfen .env dosyasını kontrol edin.');
+}
 
 export const connectDB = async () => {
   try {
@@ -17,4 +21,4 @@ export const connectDB = async () => {
   } catch (error) {
     throw error;
   }
-}; 
+};

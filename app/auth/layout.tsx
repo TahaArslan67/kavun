@@ -7,9 +7,9 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0a0a1e] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-emerald-50 to-emerald-100 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-200/50 via-emerald-100/30 to-emerald-200/50" />
       
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
@@ -18,7 +18,7 @@ export default function AuthLayout({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="absolute -top-48 -left-48 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob"
+          className="absolute -top-48 -left-48 w-96 h-96 bg-gradient-to-br from-emerald-300/50 to-emerald-400/50 rounded-full mix-blend-multiply filter blur-3xl animate-blob"
         />
         
         {/* Top Right Blob */}
@@ -26,7 +26,7 @@ export default function AuthLayout({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="absolute -top-48 -right-48 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"
+          className="absolute -top-48 -right-48 w-96 h-96 bg-gradient-to-br from-emerald-400/50 to-emerald-500/50 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"
         />
         
         {/* Bottom Left Blob */}
@@ -34,7 +34,7 @@ export default function AuthLayout({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="absolute -bottom-48 -left-48 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"
+          className="absolute -bottom-48 -left-48 w-96 h-96 bg-gradient-to-br from-emerald-500/50 to-emerald-300/50 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"
         />
         
         {/* Bottom Right Blob */}
@@ -42,12 +42,12 @@ export default function AuthLayout({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, delay: 0.6 }}
-          className="absolute -bottom-48 -right-48 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob"
+          className="absolute -bottom-48 -right-48 w-96 h-96 bg-gradient-to-br from-emerald-300/50 to-emerald-400/50 rounded-full mix-blend-multiply filter blur-3xl animate-blob"
         />
       </div>
 
       {/* Animated Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(6,95,70,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,95,70,0.05)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
 
       {/* Content Container */}
       <motion.div 
@@ -61,10 +61,10 @@ export default function AuthLayout({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="relative bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative bg-emerald-50/80 backdrop-blur-sm border border-emerald-200 shadow-lg shadow-emerald-100/50 rounded-2xl overflow-hidden"
           >
             {/* Shine Effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 via-emerald-50/30 to-emerald-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
             {/* Content */}
             <div className="relative p-8">
@@ -75,4 +75,4 @@ export default function AuthLayout({
       </motion.div>
     </div>
   );
-} 
+}

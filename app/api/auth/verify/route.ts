@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
 import User from '@/models/User';
 import connectDB from '@/lib/mongodb';
 
@@ -16,14 +14,17 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
-  console.log('Login endpoint çağrıldı');
+  console.log('Verify endpoint çağrıldı');
   try {
     // Request body'i parse et
     let body;
     try {
       console.log('Request body parse ediliyor...');
       body = await req.json();
-      console.log('Request body:', { email: body.email, password: '***' });
+      console.log('Request body:', { 
+        email: body.email, 
+        code: body.code 
+      });
     } catch (error) {
       console.error('Request body parse hatası:', error);
       return NextResponse.json(
@@ -38,13 +39,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password } = body;
+    const { email, code } = body;
 
     // Validasyon
-    if (!email || !password) {
-      console.log('Eksik alan hatası:', { email: !!email, password: !!password });
+    if (!email || !code) {
+      console.log('Eksik alan hatası:', { email: !!email, code: !!code });
       return NextResponse.json(
-        { error: 'Email ve şifre zorunludur' },
+        { error: 'Email ve doğrulama kodu zorunludur' },
         { 
           status: 400,
           headers: {
@@ -78,13 +79,18 @@ export async function POST(req: Request) {
     console.log('Kullanıcı aranıyor:', email);
     let user;
     try {
-      user = await User.findOne({ email }).select('+password');
+      user = await User.findOne({ 
+        email,
+        verificationCode: code,
+        verificationCodeExpires: { $gt: new Date() }
+      });
+
       if (!user) {
-        console.log('Kullanıcı bulunamadı:', email);
+        console.log('Geçersiz doğrulama kodu veya süresi dolmuş');
         return NextResponse.json(
-          { error: 'Email veya şifre hatalı' },
+          { error: 'Geçersiz doğrulama kodu veya süresi dolmuş' },
           { 
-            status: 401,
+            status: 400,
             headers: {
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Credentials': 'true'
@@ -93,16 +99,12 @@ export async function POST(req: Request) {
         );
       }
 
-      // E-posta doğrulama kontrolü
-      if (!user.isVerified) {
-        console.log('Email doğrulanmamış:', email);
+      if (user.isVerified) {
+        console.log('Kullanıcı zaten doğrulanmış');
         return NextResponse.json(
+          { message: 'Email adresi zaten doğrulanmış' },
           { 
-            error: 'Lütfen önce email adresinizi doğrulayın',
-            redirectUrl: `/auth/verify?email=${encodeURIComponent(email)}`
-          },
-          { 
-            status: 403,
+            status: 200,
             headers: {
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Credentials': 'true'
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error('Kullanıcı arama hatası:', error);
       return NextResponse.json(
-        { error: 'Kullanıcı arama sırasında bir hata oluştu' },
+        { error: 'Doğrulama sırasında bir hata oluştu' },
         { 
           status: 500,
           headers: {
@@ -125,62 +127,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Şifre kontrolü
-    console.log('Şifre kontrolü yapılıyor...');
+    // Kullanıcıyı doğrulanmış olarak işaretle
+    console.log('Kullanıcı doğrulanıyor...');
     try {
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        console.log('Şifre hatalı');
-        return NextResponse.json(
-          { error: 'Email veya şifre hatalı' },
-          { 
-            status: 401,
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Credentials': 'true'
-            }
-          }
-        );
-      }
-    } catch (error) {
-      console.error('Şifre karşılaştırma hatası:', error);
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      user.verificationCodeExpires = undefined;
+      await user.save();
+      console.log('Kullanıcı başarıyla doğrulandı');
+
       return NextResponse.json(
-        { error: 'Şifre kontrolü sırasında bir hata oluştu' },
         { 
-          status: 500,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': 'true'
-          }
-        }
-      );
-    }
-
-    // JWT oluştur
-    console.log('JWT token oluşturuluyor...');
-    try {
-      const token = await new SignJWT({ 
-        userId: user._id.toString(),
-        email: user.email,
-        name: user.name
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('24h')
-        .sign(new TextEncoder().encode(process.env.JWT_SECRET));
-
-      console.log('Giriş başarılı:', { userId: user._id, email: user.email });
-      
-      const response = NextResponse.json(
-        { 
-          message: 'Giriş başarılı',
-          redirectUrl: '/', // Anasayfaya yönlendir
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email
-          }
+          message: 'Email adresi başarıyla doğrulandı',
+          redirectUrl: '/auth/login'
         },
-        {
+        { 
+          status: 200,
           headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Credentials': 'true'
@@ -188,22 +150,10 @@ export async function POST(req: Request) {
         }
       );
 
-      // JWT'yi httpOnly cookie olarak ayarla
-      response.cookies.set({
-        name: 'token',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 // 24 saat
-      });
-
-      return response;
-
     } catch (error) {
-      console.error('JWT oluşturma hatası:', error);
+      console.error('Kullanıcı güncelleme hatası:', error);
       return NextResponse.json(
-        { error: 'Oturum oluşturulurken bir hata oluştu' },
+        { error: 'Doğrulama sırasında bir hata oluştu' },
         { 
           status: 500,
           headers: {
@@ -215,13 +165,13 @@ export async function POST(req: Request) {
     }
 
   } catch (error: any) {
-    console.error('Genel giriş hatası:', {
+    console.error('Genel doğrulama hatası:', {
       message: error.message,
       stack: error.stack,
       name: error.name
     });
     return NextResponse.json(
-      { error: 'Giriş sırasında bir hata oluştu' },
+      { error: 'Doğrulama sırasında bir hata oluştu' },
       { 
         status: 500,
         headers: {
