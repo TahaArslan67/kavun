@@ -1,106 +1,109 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get('email'); // Email'i URL'den al
-
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const token = searchParams.get('token');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: '',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Şifreler eşleşmiyor');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // Email kontrolü
-      if (!email) {
-        throw new Error('Email adresi bulunamadı. Lütfen şifre sıfırlama işlemini baştan başlatın.');
-      }
-
-      // Şifre validasyonu
-      if (password.length < 8) {
-        throw new Error('Şifre en az 8 karakter olmalıdır');
-      }
-
-      if (password !== confirmPassword) {
-        throw new Error('Şifreler eşleşmiyor');
-      }
-
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          code,
-          password,
-          email // Email'i request body'e ekle
+          token,
+          password: formData.password,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Bir hata oluştu');
+        throw new Error(data.message || 'Şifre sıfırlama sırasında bir hata oluştu');
       }
 
-      toast.success('Şifreniz başarıyla değiştirildi');
-      router.push('/auth/login');
-
-    } catch (error: any) {
-      toast.error(error.message);
+      setSuccess('Şifreniz başarıyla değiştirildi. Yeni şifrenizle giriş yapabilirsiniz.');
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Şifre sıfırlama sırasında bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Email yoksa kullanıcıyı şifremi unuttum sayfasına yönlendir
-  if (!email) {
-    if (typeof window !== 'undefined') {
-      router.push('/auth/forgot-password');
-    }
-    return null;
+  if (!token) {
+    return (
+      <div className="min-h-screen pt-20 bg-[#FFF5F0]">
+        <div className="max-w-md mx-auto px-6">
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
+            <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
+              Geçersiz Bağlantı
+            </h1>
+            <p className="text-[#994D1C] mb-4">
+              Bu şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş. Lütfen yeni bir şifre sıfırlama bağlantısı talep edin.
+            </p>
+            <Link
+              href="/auth/forgot-password"
+              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors inline-block text-center"
+            >
+              Şifremi Unuttum
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Şifre Sıfırlama
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Email adresinize gönderilen kodu girin ve yeni şifrenizi belirleyin.
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="verification-code" className="sr-only">
-                Doğrulama Kodu
-              </label>
-              <input
-                id="verification-code"
-                name="code"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Doğrulama Kodu"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                disabled={isLoading}
-              />
+    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
+      <div className="max-w-md mx-auto px-6">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
+          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
+            Yeni Şifre Belirle
+          </h1>
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+              {error}
             </div>
+          )}
+          {success && (
+            <div className="mb-4 p-4 bg-[#FFE5D9] border border-[#FFB996] text-[#994D1C] rounded-lg">
+              {success}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Yeni Şifre
               </label>
               <input
@@ -108,50 +111,44 @@ export default function ResetPasswordPage() {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Yeni Şifre"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
                 disabled={isLoading}
               />
+              <p className="mt-1 text-xs text-[#994D1C]">En az 8 karakter</p>
             </div>
             <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Şifre Tekrar
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#994D1C] mb-1">
+                Yeni Şifre Tekrar
               </label>
               <input
-                id="confirm-password"
+                id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Şifre Tekrar"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
-          </div>
-
-          <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               disabled={isLoading}
+              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors disabled:opacity-50"
             >
-              {isLoading ? 'İşleniyor...' : 'Şifreyi Sıfırla'}
+              {isLoading ? 'Şifre Değiştiriliyor...' : 'Şifreyi Değiştir'}
             </button>
-          </div>
-
-          <div className="text-sm text-center">
-            <Link
-              href="/auth/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
+          </form>
+          <p className="mt-4 text-center text-sm text-[#994D1C]">
+            <Link href="/auth/login" className="font-medium text-[#6B3416] hover:text-[#994D1C]">
               Giriş sayfasına dön
             </Link>
-          </div>
-        </form>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -3,21 +3,23 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get('role');
-
+  const university = searchParams.get('university');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: role || ''
+    role: role || '',
+    university: university || ''
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -27,17 +29,16 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Şifreler eşleşmiyor');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // Şifre kontrolü
-      if (formData.password.length < 8) {
-        throw new Error('Şifre en az 8 karakter olmalıdır');
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Şifreler eşleşmiyor');
-      }
-
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -47,47 +48,46 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role || role
+          role: formData.role,
+          university: formData.university
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Kayıt sırasında bir hata oluştu');
+        throw new Error(data.message || 'Kayıt sırasında bir hata oluştu');
       }
 
-      toast.success('Kayıt başarılı! Giriş yapabilirsiniz.');
-      router.push('/auth/login');
-
-    } catch (error: any) {
-      toast.error(error.message);
+      setSuccess('Hesabınız başarıyla oluşturuldu! Email adresinize gönderilen doğrulama linkine tıklayarak hesabınızı aktifleştirebilirsiniz.');
+      router.push(data.redirectUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kayıt sırasında bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-800">
+    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
+      <div className="max-w-md mx-auto px-6">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
+          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
             Yeni Hesap Oluştur
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Zaten hesabınız var mı?{' '}
-            <Link
-              href="/auth/login"
-              className="font-medium text-emerald-600 hover:text-emerald-500"
-            >
-              Giriş yapın
-            </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          </h1>
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-4 bg-[#FFE5D9] border border-[#FFB996] text-[#994D1C] rounded-lg">
+              {success}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Ad Soyad
               </label>
               <input
@@ -95,53 +95,64 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="Ad Soyad"
                 value={formData.name}
                 onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
-
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Adresi
+              <label htmlFor="email" className="block text-sm font-medium text-[#994D1C] mb-1">
+                Email
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="ornek@email.com"
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
-
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="university" className="block text-sm font-medium text-[#994D1C] mb-1">
+                Üniversite
+              </label>
+              <input
+                id="university"
+                name="university"
+                type="text"
+                required
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996] bg-[#FFF5F0]"
+                value={formData.university}
+                onChange={handleChange}
+                disabled={true}
+              />
+            </div>
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Rol
               </label>
               <select
                 id="role"
                 name="role"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                value={formData.role || role || ''}
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] bg-white"
+                value={formData.role}
                 onChange={handleChange}
-                disabled={isLoading || !!role}
+                disabled={!!role || isLoading}
               >
-                <option value="">Rol Seçin</option>
+                <option value="">Seçiniz</option>
                 <option value="student">Öğrenci</option>
-                <option value="teacher">Öğretmen</option>
+                <option value="teacher">Eğitmen</option>
               </select>
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Şifre
               </label>
               <input
@@ -149,17 +160,16 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isLoading}
               />
-              <p className="mt-1 text-xs text-gray-500">En az 8 karakter</p>
+              <p className="mt-1 text-xs text-[#994D1C]">En az 8 karakter</p>
             </div>
-
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Şifre Tekrar
               </label>
               <input
@@ -167,25 +177,28 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
-          </div>
-
-          <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
               disabled={isLoading}
+              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Kaydediliyor...' : 'Kayıt Ol'}
             </button>
-          </div>
-        </form>
+          </form>
+          <p className="mt-4 text-center text-sm text-[#994D1C]">
+            Zaten hesabın var mı?{' '}
+            <Link href="/auth/login" className="font-medium text-[#6B3416] hover:text-[#994D1C]">
+              Giriş Yap
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

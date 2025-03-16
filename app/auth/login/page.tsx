@@ -31,35 +31,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-800">
+    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
+      <div className="max-w-md mx-auto px-6">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
+          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
             Giriş Yap
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Hesabınız yok mu?{' '}
-            <Link
-              href={role ? `/auth/register?role=${role}` : '/auth/register'}
-              className="font-medium text-emerald-600 hover:text-emerald-500"
-            >
-              Hemen kayıt olun
-            </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          </h1>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Adresi
+              <label htmlFor="email" className="block text-sm font-medium text-[#994D1C] mb-1">
+                Email
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="ornek@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -67,45 +55,44 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-[#994D1C] mb-1">
                 Şifre
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
+            <div className="flex items-center justify-end">
               <Link
                 href="/auth/forgot-password"
-                className="font-medium text-emerald-600 hover:text-emerald-500"
+                className="text-sm font-medium text-[#994D1C] hover:text-[#6B3416]"
               >
                 Şifremi Unuttum
               </Link>
             </div>
-          </div>
-
-          <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
               disabled={isLoading}
+              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors disabled:opacity-50"
             >
-              {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+              {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
             </button>
-          </div>
-        </form>
+          </form>
+          <p className="mt-4 text-center text-sm text-[#994D1C]">
+            Hesabın yok mu?{' '}
+            <Link href={role ? `/auth/register?role=${role}` : '/auth/register'} className="font-medium text-[#6B3416] hover:text-[#994D1C]">
+              Kayıt Ol
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

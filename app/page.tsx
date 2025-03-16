@@ -1,127 +1,243 @@
 'use client';
-import { Suspense } from 'react';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import { universities } from '@/data/universities';
+import Navbar from '@/components/Navbar';
 
-export default function HomePage() {
-  const { user } = useAuth();
+export default function Home() {
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [localUniversities, setLocalUniversities] = useState<string[]>([]);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [error, setError] = useState('');
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleRoleSelect = (role: 'student' | 'teacher') => {
-    if (!user) {
-      router.push(`/auth/register?role=${role}`);
-    } else {
-      router.push(`/dashboard/${role}`);
+    router.push(`/auth/register?role=${role}&university=${encodeURIComponent(searchTerm)}`);
+  };
+
+  const handleCloseDialog = () => {
+    setShowRoleDialog(false);
+  };
+
+  const handleDialogKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleCloseDialog();
+    }
+  };
+
+  const handleUniversitySelect = (uni: string) => {
+    setSearchTerm(uni);
+    setShowDropdown(false);
+    setActiveIndex(-1);
+    setError('');
+    setShowRoleDialog(true);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLocalUniversities(universities);
+      setLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (error) setError('');
+  }, [searchTerm]);
+
+  const filteredUniversities = searchTerm
+    ? localUniversities
+        .filter(uni => 
+          uni.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .slice(0, 5)
+    : [];
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showDropdown || loading) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex(prev => 
+          prev < filteredUniversities.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        if (activeIndex >= 0 && activeIndex < filteredUniversities.length) {
+          handleUniversitySelect(filteredUniversities[activeIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowDropdown(false);
+        setActiveIndex(-1);
+        break;
     }
   };
 
   return (
-    <div className="min-h-screen pt-24 relative overflow-hidden">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-200 via-emerald-100 to-emerald-200" />
-
-      {/* Content */}
-      <div className="relative container mx-auto px-4">
-        <div className="flex flex-col items-center justify-center min-h-[80vh] text-emerald-900">
-          {/* Hero Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 bg-clip-text text-transparent">
-              Kavun
+    <>
+      <Navbar />
+      <main className="min-h-screen flex items-center justify-center bg-[#FFF5F0] pt-16">
+        <div className="w-full max-w-2xl mx-auto px-6 py-16">
+          <div className="flex flex-col items-center">
+            <h1 className="text-5xl font-bold text-[#6B3416] mb-8 text-center">
+              Öğrencileri ve eğitmenleri buluşturan platform
             </h1>
-            <p className="text-xl text-emerald-700 max-w-2xl mx-auto">
-              Yazılım alanında kendini geliştirmek isteyen öğrenciler
-              için eğitimler ve projeler düzenliyoruz.
+            <p className="text-lg text-[#994D1C] mb-12 text-center">
+              Kavun, öğrencileri ve eğitmenleri bir araya getiren yeni nesil bir eğitim platformudur.
+              İhtiyacınıza uygun eğitmeni bulun veya eğitmen olarak platformumuza katılın.
             </p>
-          </motion.div>
 
-          {/* Role Selection Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-6 mt-8"
-          >
-            <button
-              onClick={() => handleRoleSelect('student')}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-600 p-8 transition-all duration-300 hover:shadow-lg hover:from-emerald-600 hover:to-emerald-500"
-            >
-              <div className="relative z-10">
-                <h3 className="text-2xl font-semibold text-white mb-3">Öğrenciyim</h3>
-                <p className="text-emerald-100">Yeni teknolojiler öğrenmek ve kendimi geliştirmek istiyorum</p>
+            {/* University Search */}
+            <div className="w-full max-w-xl">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Üniversitenizi seçin..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowDropdown(true);
+                    setError('');
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowDropdown(false), 200);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  className={`w-full px-4 py-3 bg-white border rounded-lg outline-none transition-all duration-200
+                    ${loading 
+                      ? 'border-[#FFB996] opacity-75 cursor-not-allowed animate-pulse' 
+                      : error
+                        ? 'border-[#FF8B5E] hover:border-[#FF8B5E] focus:border-[#FF8B5E] focus:ring-2 focus:ring-[#FF8B5E]/20'
+                        : 'border-[#FFE5D9] hover:border-[#FFB996] focus:border-[#FFB996] focus:ring-2 focus:ring-[#FFB996]/20'
+                    }
+                    text-[#6B3416] placeholder-[#FFB996]`}
+                  disabled={loading}
+                  role="combobox"
+                  aria-expanded={showDropdown}
+                  aria-controls="university-listbox"
+                  aria-activedescendant={activeIndex >= 0 ? `university-option-${activeIndex}` : undefined}
+                  aria-label="Üniversite ara"
+                  aria-busy={loading}
+                  aria-invalid={!!error}
+                />
+                {error && (
+                  <div className="absolute mt-1 text-sm text-[#FF8B5E] font-medium" role="alert">
+                    {error}
+                  </div>
+                )}
+                {loading && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2" aria-hidden="true">
+                    <div className="animate-spin rounded-full h-5 w-5 border-[2.5px] border-[#FFB996]/30 border-t-[#FF8B5E] shadow-sm"></div>
+                  </div>
+                )}
               </div>
-              <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
+              {showDropdown && searchTerm && (
+                <div 
+                  ref={dropdownRef}
+                  id="university-listbox"
+                  role="listbox"
+                  className="absolute w-full mt-1 bg-white border border-[#FFE5D9] rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                  aria-label="Üniversite seçenekleri"
+                >
+                  {loading ? (
+                    <div className="px-4 py-3 text-[#994D1C] text-center" role="status">
+                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-[2.5px] border-[#FFB996]/30 border-t-[#FF8B5E] shadow-sm mr-2" aria-hidden="true"></div>
+                      <span className="animate-pulse">Üniversiteler yükleniyor...</span>
+                    </div>
+                  ) : filteredUniversities.length > 0 ? (
+                    filteredUniversities.map((uni, index) => (
+                      <div
+                        key={index}
+                        id={`university-option-${index}`}
+                        role="option"
+                        aria-selected={index === activeIndex}
+                        className={`group px-4 py-3 hover:bg-gradient-to-r hover:from-[#FFE5D9] hover:to-[#FFF5F0] cursor-pointer transition-all duration-200
+                          ${index === activeIndex ? 'bg-gradient-to-r from-[#FFE5D9] to-[#FFF5F0]' : ''}`}
+                        onClick={() => handleUniversitySelect(uni)}
+                      >
+                        <div className={`transition-colors duration-200
+                          ${index === activeIndex ? 'text-[#6B3416]' : 'text-[#994D1C] group-hover:text-[#6B3416]'}`}>
+                          {uni}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-[#994D1C] text-center" role="status">
+                      Sonuç bulunamadı
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => handleRoleSelect('teacher')}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-700 p-8 transition-all duration-300 hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600"
-            >
-              <div className="relative z-10">
-                <h3 className="text-2xl font-semibold text-white mb-3">Öğretmenim</h3>
-                <p className="text-emerald-100">Bilgilerimi paylaşmak ve öğrencilere mentorluk yapmak istiyorum</p>
-              </div>
-              <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
-          </motion.div>
-
-          {/* Features Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16"
-          >
-            {[
-              {
-                title: 'Projeler',
-                description: 'Gerçek dünya projelerinde deneyim kazanın',
-                gradient: 'from-emerald-600 to-emerald-500',
-              },
-              {
-                title: 'Mentorluk',
-                description: 'Deneyimli yazılımcılardan birebir destek alın',
-                gradient: 'from-emerald-700 to-emerald-600',
-              },
-            ].map((feature, index) => (
-              <div
-                key={feature.title}
-                className="group relative p-6 rounded-xl overflow-hidden"
+            {/* Role Selection Dialog */}
+            {showRoleDialog && (
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                onClick={handleCloseDialog}
+                onKeyDown={handleDialogKeyDown}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="role-dialog-title"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-10 group-hover:opacity-15 transition-opacity duration-300`} />
-                <div className="relative">
-                  <h3 className="text-xl font-semibold mb-2 text-emerald-800">{feature.title}</h3>
-                  <p className="text-emerald-700">{feature.description}</p>
+                <div 
+                  className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 
+                      id="role-dialog-title"
+                      className="text-2xl font-bold text-[#6B3416] text-center flex-1"
+                    >
+                      Nasıl devam etmek istersiniz?
+                    </h2>
+                    <button
+                      onClick={handleCloseDialog}
+                      className="text-[#994D1C] hover:text-[#6B3416] transition-colors duration-200 p-2"
+                      aria-label="Kapat"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <button
+                      onClick={() => handleRoleSelect('student')}
+                      className="w-full px-8 py-3 bg-[#FFB996] text-[#994D1C] rounded-full text-base font-medium hover:bg-[#FF8B5E] transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                      aria-label="Öğrenci olarak devam et"
+                    >
+                      Öğrenci Olarak Devam Et
+                    </button>
+                    <button
+                      onClick={() => handleRoleSelect('teacher')}
+                      className="w-full px-8 py-3 bg-[#FFE5D9] text-[#994D1C] rounded-full text-base font-medium hover:bg-[#FFB996] transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                      aria-label="Eğitmen olarak devam et"
+                    >
+                      Eğitmen Olarak Devam Et
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </motion.div>
-
-          {!user && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="mt-8 text-gray-500"
-            >
-              Devam etmek için lütfen{' '}
-              <Link href="/auth/register" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                kayıt olun
-              </Link>
-              {' '}veya{' '}
-              <Link href="/auth/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                giriş yapın
-              </Link>
-            </motion.p>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
