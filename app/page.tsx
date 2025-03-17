@@ -104,8 +104,8 @@ export default function Home() {
             </p>
 
             {/* University Search */}
-            <div className="w-full max-w-xl">
-              <div className="relative">
+            <div className="w-full max-w-xl relative">
+              <div className="w-full">
                 <input
                   type="text"
                   placeholder="Üniversitenizi seçin..."

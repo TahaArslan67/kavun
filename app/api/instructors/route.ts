@@ -1,33 +1,31 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import mongoose from 'mongoose';
+import Instructor from '@/models/instructor';
 
 export async function GET() {
   try {
     await connectDB();
-
-    // Sadece eğitmen rolüne sahip kullanıcıları getir
-    const users = mongoose.connection.collection('users');
-    const instructors = await users
-      .find({ role: 'teacher' })
-      .project({
-        _id: 1,
-        name: 1,
-        email: 1,
-        expertise: 1,
-        title: 1,
-        rating: 1,
-        students: 1,
-        courses: 1,
-        image: 1
-      })
-      .toArray();
-
+    const instructors = await Instructor.find({}).sort({ rating: -1 });
     return NextResponse.json(instructors);
   } catch (error) {
-    console.error('Eğitmenler getirilirken hata:', error);
+    console.error('Eğitmenler getirilemedi:', error);
     return NextResponse.json(
-      { error: 'Eğitmenler getirilirken bir hata oluştu' },
+      { error: 'Eğitmenler getirilemedi' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    await connectDB();
+    const data = await request.json();
+    const instructor = await Instructor.create(data);
+    return NextResponse.json(instructor, { status: 201 });
+  } catch (error) {
+    console.error('Eğitmen oluşturulamadı:', error);
+    return NextResponse.json(
+      { error: 'Eğitmen oluşturulamadı' },
       { status: 500 }
     );
   }

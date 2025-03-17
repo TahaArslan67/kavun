@@ -1,97 +1,109 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const searchParams = useSearchParams();
-  const role = searchParams.get('role');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await login(email, password);
-      toast.success('Başarıyla giriş yapıldı');
-      router.push(role ? `/dashboard/${role}` : '/');
-    } catch (error: any) {
-      toast.error(error.message || 'Giriş yapılırken bir hata oluştu');
-    } finally {
-      setIsLoading(false);
-    }
+    // Giriş işlemleri burada yapılacak
   };
 
   return (
-    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
-      <div className="max-w-md mx-auto px-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
-          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
-            Giriş Yap
-          </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#994D1C] mb-1">
-                Email
-              </label>
+    <div className="min-h-screen flex items-center justify-center bg-[#FFF5F0] px-4 py-16">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-[#6B3416]">Giriş Yap</h1>
+          <p className="mt-2 text-[#994D1C]">Hesabınıza giriş yapın</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#6B3416]">
+              E-posta
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-[#FFF5F0] border border-[#FFE5D9] rounded-lg outline-none transition-all duration-200 
+                focus:border-[#FFB996] focus:ring-2 focus:ring-[#FFB996]/20 
+                text-[#6B3416] placeholder-[#FFB996]"
+              placeholder="ornek@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[#6B3416]">
+              Şifre
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-[#FFF5F0] border border-[#FFE5D9] rounded-lg outline-none transition-all duration-200 
+                focus:border-[#FFB996] focus:ring-2 focus:ring-[#FFB996]/20 
+                text-[#6B3416] placeholder-[#FFB996]"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
-                placeholder="ornek@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                id="remember"
+                name="remember"
+                type="checkbox"
+                className="h-4 w-4 rounded border-[#FFE5D9] text-[#FFB996] focus:ring-[#FFB996]/20"
               />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#994D1C] mb-1">
-                Şifre
+              <label htmlFor="remember" className="ml-2 block text-sm text-[#994D1C]">
+                Beni hatırla
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
             </div>
-            <div className="flex items-center justify-end">
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm font-medium text-[#994D1C] hover:text-[#6B3416]"
-              >
-                Şifremi Unuttum
-              </Link>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors disabled:opacity-50"
+            <Link 
+              href="/auth/forgot-password"
+              className="text-sm font-medium text-[#994D1C] hover:text-[#6B3416] transition-colors duration-200"
             >
-              {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
-            </button>
-          </form>
-          <p className="mt-4 text-center text-sm text-[#994D1C]">
-            Hesabın yok mu?{' '}
-            <Link href={role ? `/auth/register?role=${role}` : '/auth/register'} className="font-medium text-[#6B3416] hover:text-[#994D1C]">
-              Kayıt Ol
+              Şifremi Unuttum
             </Link>
-          </p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-[#FFB996] to-[#FF8B5E] text-[#6B3416] font-medium px-4 py-2 rounded-lg 
+              transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB996]/20 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Giriş Yap
+          </button>
+        </form>
+
+        <div className="text-center text-sm">
+          <span className="text-[#994D1C]">Hesabınız yok mu? </span>
+          <Link 
+            href="/auth/register"
+            className="text-[#6B3416] font-medium hover:text-[#994D1C] transition-colors duration-200"
+          >
+            Kayıt Ol
+          </Link>
         </div>
       </div>
     </div>
