@@ -2,50 +2,60 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const router = useRouter();
+  const { login } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Giriş işlemleri burada yapılacak
+    setError('');
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      await login({ email, password });
+      router.push('/');
+    } catch (err: any) {
+      setError(err.message || 'Giriş yaparken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFF5F0] px-4 py-16">
+    <div className="min-h-screen flex items-center justify-center bg-[#FFF5F0] px-4 py-16 space-y-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#6B3416]">Giriş Yap</h1>
-          <p className="mt-2 text-[#994D1C]">Hesabınıza giriş yapın</p>
+          <h2 className="text-3xl font-bold text-[#994D1C]">
+            Giriş Yap
+          </h2>
+          <p className="mt-2 text-sm text-[#6B3416]">
+            Hesabınız yok mu?{' '}
+            <Link href="/auth/register" className="font-medium text-[#FF8B5E] hover:text-[#994D1C] transition-colors">
+              Kayıt Ol
+            </Link>
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-[#6B3416]">
-              E-posta
+              Email
             </label>
             <input
               id="email"
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 bg-[#FFF5F0] border border-[#FFE5D9] rounded-lg outline-none transition-all duration-200 
-                focus:border-[#FFB996] focus:ring-2 focus:ring-[#FFB996]/20 
-                text-[#6B3416] placeholder-[#FFB996]"
-              placeholder="ornek@email.com"
               required
+              className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
             />
           </div>
 
@@ -57,13 +67,8 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 bg-[#FFF5F0] border border-[#FFE5D9] rounded-lg outline-none transition-all duration-200 
-                focus:border-[#FFB996] focus:ring-2 focus:ring-[#FFB996]/20 
-                text-[#6B3416] placeholder-[#FFB996]"
-              placeholder="••••••••"
               required
+              className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
             />
           </div>
 
@@ -73,38 +78,35 @@ export default function LoginPage() {
                 id="remember"
                 name="remember"
                 type="checkbox"
-                className="h-4 w-4 rounded border-[#FFE5D9] text-[#FFB996] focus:ring-[#FFB996]/20"
+                className="h-4 w-4 rounded border-[#FFB996] text-[#FF8B5E] focus:ring-[#FF8B5E]"
               />
-              <label htmlFor="remember" className="ml-2 block text-sm text-[#994D1C]">
-                Beni hatırla
+              <label htmlFor="remember" className="ml-2 block text-sm text-[#6B3416]">
+                Beni Hatırla
               </label>
             </div>
-            <Link 
+
+            <Link
               href="/auth/forgot-password"
-              className="text-sm font-medium text-[#994D1C] hover:text-[#6B3416] transition-colors duration-200"
+              className="text-sm font-medium text-[#FF8B5E] hover:text-[#994D1C] transition-colors"
             >
               Şifremi Unuttum
             </Link>
           </div>
 
+          {error && (
+            <div className="text-red-600 text-sm font-medium">
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-[#FFB996] to-[#FF8B5E] text-[#6B3416] font-medium px-4 py-2 rounded-lg 
-              transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB996]/20 hover:scale-[1.02] active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#FF8B5E] to-[#FFB996] text-white font-semibold py-3 px-6 rounded-md hover:from-[#994D1C] hover:to-[#FF8B5E] transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
           >
-            Giriş Yap
+            {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
-
-        <div className="text-center text-sm">
-          <span className="text-[#994D1C]">Hesabınız yok mu? </span>
-          <Link 
-            href="/auth/register"
-            className="text-[#6B3416] font-medium hover:text-[#994D1C] transition-colors duration-200"
-          >
-            Kayıt Ol
-          </Link>
-        </div>
       </div>
     </div>
   );

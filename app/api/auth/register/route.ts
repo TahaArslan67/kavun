@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import User from '@/models/User';
+import User, { IUser } from '@/models/User';
 import connectDB from '@/lib/mongodb';
 import { generateVerificationCode, sendVerificationEmail } from '@/lib/mail';
 
@@ -25,7 +25,9 @@ export async function POST(req: Request) {
       body = await req.json();
       console.log('Request body:', { 
         name: body.name, 
-        email: body.email, 
+        email: body.email,
+        role: body.role,
+        university: body.university,
         password: '***'
       });
     } catch (error) {
@@ -42,13 +44,33 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password } = body;
+    const { name, email, password, role, university } = body;
 
     // Validasyon
-    if (!name || !email || !password) {
-      console.log('Eksik alan hatası:', { name: !!name, email: !!email, password: !!password });
+    if (!name || !email || !password || !role || !university) {
+      console.log('Eksik alan hatası:', { 
+        name: !!name, 
+        email: !!email, 
+        password: !!password,
+        role: !!role,
+        university: !!university
+      });
       return NextResponse.json(
         { error: 'Tüm alanlar zorunludur' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
+    // Rol kontrolü
+    if (!['student', 'teacher'].includes(role)) {
+      return NextResponse.json(
+        { error: 'Geçersiz rol' },
         { 
           status: 400,
           headers: {
@@ -134,18 +156,62 @@ export async function POST(req: Request) {
     const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 dakika
 
     // Kullanıcı oluştur
-    console.log('Kullanıcı oluşturuluyor...');
-    let user;
+    console.log('Kullanıcı oluşturuluyor...', {
+      name,
+      email,
+      role,
+      university,
+      verificationCode,
+      verificationCodeExpires,
+      isVerified: false
+    });
+
+    let user: IUser;
     try {
-      user = await User.create({
+      // Önce User modelini import ettiğimizden emin olalım
+      console.log('User model:', User);
+      console.log('User model schema:', User.schema.obj);
+
+      // Doğrudan User.create kullan
+      const userData = {
         name,
         email,
         password: hashedPassword,
+        role,
+        university,
         verificationCode,
         verificationCodeExpires,
         isVerified: false
+      };
+
+      console.log('Creating user with data:', userData);
+
+      try {
+        user = await User.create(userData) as IUser;
+      } catch (createError: any) {
+        console.error('User.create error:', {
+          error: createError,
+          validationErrors: createError.errors,
+          code: createError.code,
+          message: createError.message
+        });
+        throw createError;
+      }
+
+      // Kaydedilen veriyi kontrol et
+      console.log('Kullanıcı oluşturuldu:', {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        university: user.university,
+        isVerified: user.isVerified
       });
-      console.log('Kullanıcı oluşturuldu:', user._id);
+
+      // MongoDB'den tekrar kontrol et
+      const savedUser = await User.findById(user._id).lean();
+      console.log('MongoDB\'den kontrol:', savedUser);
+
     } catch (error: any) {
       console.error('Kullanıcı oluşturma hatası:', error);
       if (error.code === 11000) {
@@ -178,14 +244,13 @@ export async function POST(req: Request) {
       await sendVerificationEmail(email, verificationCode);
       console.log('Doğrulama e-postası gönderildi');
     } catch (error) {
-      console.error('E-posta gönderme hatası:', error);
-      // E-posta gönderilemese bile kullanıcı kaydını silmiyoruz
-      // Kullanıcı daha sonra tekrar doğrulama e-postası isteyebilir
+      console.error('Email gönderme hatası:', error);
+      // Email gönderilemese bile kullanıcı oluşturuldu, sadece log
     }
 
     return NextResponse.json(
       { 
-        message: 'Kayıt başarılı. Lütfen e-posta adresinizi doğrulayın.',
+        message: 'Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.',
         redirectUrl: `/auth/verify?email=${encodeURIComponent(email)}`,
         email
       },
@@ -198,12 +263,8 @@ export async function POST(req: Request) {
       }
     );
 
-  } catch (error: any) {
-    console.error('Genel kayıt hatası:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+  } catch (error) {
+    console.error('Register endpoint hatası:', error);
     return NextResponse.json(
       { error: 'Kayıt sırasında bir hata oluştu' },
       { 

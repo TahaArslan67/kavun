@@ -1,25 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,69 +23,84 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Şifre sıfırlama isteği sırasında bir hata oluştu');
+      if (!response.ok) {
+        throw new Error(data.error || 'Bir hata oluştu');
       }
 
-      setSuccess('Şifre sıfırlama bağlantısı email adresinize gönderildi. Lütfen email kutunuzu kontrol edin.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Şifre sıfırlama isteği sırasında bir hata oluştu');
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
-      <div className="max-w-md mx-auto px-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
-          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
-            Şifremi Unuttum
-          </h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold text-[#994D1C] text-center">
+          Şifremi Unuttum
+        </h2>
+        <p className="mt-2 text-sm text-[#6B3416] text-center">
+          Email adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+        </p>
+      </div>
+
+      {success ? (
+        <div className="text-center space-y-4">
+          <div className="text-[#994D1C] font-medium">
+            Şifre sıfırlama bağlantısı email adresinize gönderildi.
+          </div>
+          <Link
+            href="/auth/login"
+            className="text-[#FF8B5E] hover:text-[#994D1C] transition-colors font-medium"
+          >
+            Giriş sayfasına dön
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#6B3416]">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
+            />
+          </div>
+
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+            <div className="text-red-600 text-sm font-medium">
               {error}
             </div>
           )}
-          {success && (
-            <div className="mb-4 p-4 bg-[#FFE5D9] border border-[#FFB996] text-[#994D1C] rounded-lg">
-              {success}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#994D1C] mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="w-full px-4 py-2 border border-[#FFE5D9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFB996] text-[#6B3416] placeholder-[#FFB996]"
-                placeholder="ornek@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors disabled:opacity-50"
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#FF8B5E] to-[#FFB996] text-white font-semibold py-3 px-6 rounded-md hover:from-[#994D1C] hover:to-[#FF8B5E] transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Gönderiliyor...' : 'Şifre Sıfırlama Bağlantısı Gönder'}
+          </button>
+
+          <div className="text-center">
+            <Link
+              href="/auth/login"
+              className="text-sm font-medium text-[#FF8B5E] hover:text-[#994D1C] transition-colors"
             >
-              {isLoading ? 'Gönderiliyor...' : 'Şifre Sıfırlama Bağlantısı Gönder'}
-            </button>
-          </form>
-          <p className="mt-4 text-center text-sm text-[#994D1C]">
-            <Link href="/auth/login" className="font-medium text-[#6B3416] hover:text-[#994D1C]">
               Giriş sayfasına dön
             </Link>
-          </p>
-        </div>
-      </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

@@ -6,115 +6,130 @@ import Link from 'next/link';
 export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const email = searchParams.get('email');
+  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [remainingTime, setRemainingTime] = useState(5);
 
-  useEffect(() => {
-    const verifyEmail = async () => {
-      if (!token) return;
-      
-      setIsLoading(true);
-      try {
-        const res = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !verificationCode) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data.message || 'Email doğrulama sırasında bir hata oluştu');
-        }
-
-        setSuccess('Email adresiniz başarıyla doğrulandı! Giriş sayfasına yönlendiriliyorsunuz...');
-        
-        // Start countdown
-        const timer = setInterval(() => {
-          setRemainingTime((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              router.push('/auth/login');
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-
-        return () => clearInterval(timer);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Email doğrulama sırasında bir hata oluştu');
-      } finally {
-        setIsLoading(false);
+      if (!res.ok) {
+        throw new Error(data.error || 'Email doğrulama sırasında bir hata oluştu');
       }
-    };
 
-    verifyEmail();
-  }, [token, router]);
+      setSuccess('Email adresiniz başarıyla doğrulandı! Giriş sayfasına yönlendiriliyorsunuz...');
+      
+      // Start countdown
+      const timer = setInterval(() => {
+        setRemainingTime((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/auth/login');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
-  if (!token) {
+      return () => clearInterval(timer);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Email doğrulama sırasında bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!email) {
     return (
-      <div className="min-h-screen pt-20 bg-[#FFF5F0]">
-        <div className="max-w-md mx-auto px-6">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
-            <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
-              Geçersiz Bağlantı
-            </h1>
-            <p className="text-[#994D1C] mb-4">
-              Bu doğrulama bağlantısı geçersiz veya süresi dolmuş. Lütfen yeni bir doğrulama bağlantısı talep edin.
-            </p>
-            <Link
-              href="/auth/login"
-              className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors inline-block text-center"
-            >
-              Giriş Yap
-            </Link>
-          </div>
+      <div className="text-center space-y-4">
+        <div className="text-[#994D1C] font-medium">
+          Geçersiz veya süresi dolmuş doğrulama bağlantısı.
         </div>
+        <Link
+          href="/auth/login"
+          className="text-[#FF8B5E] hover:text-[#994D1C] transition-colors font-medium"
+        >
+          Giriş sayfasına dön
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-[#FFF5F0]">
-      <div className="max-w-md mx-auto px-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#FFE5D9]">
-          <h1 className="text-2xl font-bold text-[#6B3416] mb-6">
-            Email Doğrulama
-          </h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold text-[#994D1C] text-center">
+          Email Doğrulama
+        </h2>
+        <p className="mt-2 text-sm text-[#6B3416] text-center">
+          Email adresinize gönderilen 6 haneli doğrulama kodunu giriniz.
+        </p>
+      </div>
+
+      {success ? (
+        <div className="text-center space-y-4">
+          <div className="text-[#994D1C] font-medium">
+            {success}
+          </div>
+          <p className="text-[#6B3416]">
+            {remainingTime} saniye içinde yönlendirileceksiniz...
+          </p>
+          <Link
+            href="/auth/login"
+            className="text-[#FF8B5E] hover:text-[#994D1C] transition-colors font-medium"
+          >
+            Hemen Giriş Yap
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="code" className="block text-sm font-medium text-[#6B3416]">
+              Doğrulama Kodu
+            </label>
+            <input
+              type="text"
+              id="code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              placeholder="123456"
+              className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
+              maxLength={6}
+              required
+            />
+          </div>
+
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+            <div className="text-red-600 text-sm font-medium">
               {error}
             </div>
           )}
-          {success ? (
-            <div className="space-y-4">
-              <div className="p-4 bg-[#FFE5D9] border border-[#FFB996] text-[#994D1C] rounded-lg">
-                {success}
-              </div>
-              <p className="text-center text-[#994D1C]">
-                {remainingTime} saniye içinde yönlendirileceksiniz...
-              </p>
-              <Link
-                href="/auth/login"
-                className="w-full px-6 py-2 bg-[#FFB996] text-[#994D1C] rounded-full text-sm font-medium hover:bg-[#FF8B5E] transition-colors inline-block text-center"
-              >
-                Hemen Giriş Yap
-              </Link>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FFB996]"></div>
-              <span className="ml-3 text-[#994D1C]">Email doğrulanıyor...</span>
-            </div>
-          )}
-        </div>
-      </div>
+
+          <button
+            type="submit"
+            disabled={loading || !verificationCode}
+            className="w-full bg-gradient-to-r from-[#FF8B5E] to-[#FFB996] text-white font-semibold py-3 px-6 rounded-md hover:from-[#994D1C] hover:to-[#FF8B5E] transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Doğrulanıyor...' : 'Doğrula'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

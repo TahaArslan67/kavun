@@ -1,8 +1,8 @@
 import { Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import './globals.css'
-import Navbar from '../src/components/Navbar'
-import { AuthProvider } from '@/context/AuthContext'
+import { AuthProvider } from '@/contexts/AuthContext'
+import Navbar from '@/src/components/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,44 +22,37 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr">
+    <html lang="en">
       <head>
         <link rel="icon" href="/logo.ico" />
       </head>
-      <body className={`${inter.className} bg-emerald-50 text-emerald-900 min-h-screen`}>
+      <body className={inter.className}>
         <AuthProvider>
           <Navbar />
-          <main>
-            {children}
-          </main>
           <Toaster 
             position="top-right"
             toastOptions={{
+              duration: 3000,
               style: {
-                background: '#2ecc71',
-                color: '#ecfdf5',
-                borderRadius: '8px',
+                background: '#FFF5F0',
+                color: '#6B3416',
+                border: '1px solid #FFE5D9',
               },
               success: {
-                style: {
-                  background: '#2ecc71',
-                },
                 iconTheme: {
-                  primary: '#ecfdf5',
-                  secondary: '#2ecc71',
+                  primary: '#6B3416',
+                  secondary: '#FFF5F0',
                 },
               },
               error: {
-                style: {
-                  background: '#991b1b',
-                },
                 iconTheme: {
-                  primary: '#fee2e2',
-                  secondary: '#991b1b',
+                  primary: '#FF8B5E',
+                  secondary: '#FFF5F0',
                 },
               },
             }}
           />
+          {children}
         </AuthProvider>
       </body>
     </html>

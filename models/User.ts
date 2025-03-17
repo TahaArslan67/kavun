@@ -1,6 +1,22 @@
-import mongoose from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { Schema } from 'mongoose';
 
+// User interface
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: 'student' | 'teacher';
+  university: string;
+  isVerified: boolean;
+  verificationCode?: string;
+  verificationCodeExpires?: Date;
+  resetPasswordCode?: string;
+  resetPasswordExpires?: Date;
+  createdAt: Date;
+}
+
+// Şema tanımı
 const userSchema = new Schema({
   name: {
     type: String,
@@ -28,26 +44,27 @@ const userSchema = new Schema({
     minlength: [8, 'Şifre en az 8 karakter olmalıdır'],
     select: false
   },
+  role: {
+    type: String,
+    required: [true, 'Rol alanı zorunludur'],
+    enum: {
+      values: ['student', 'teacher'],
+      message: 'Geçerli bir rol seçiniz'
+    }
+  },
+  university: {
+    type: String,
+    required: [true, 'Üniversite alanı zorunludur'],
+    trim: true
+  },
   isVerified: {
     type: Boolean,
     default: false
   },
-  verificationCode: {
-    type: String,
-    select: false
-  },
-  verificationCodeExpires: {
-    type: Date,
-    select: false
-  },
-  resetPasswordCode: {
-    type: String,
-    select: false
-  },
-  resetPasswordExpires: {
-    type: Date,
-    select: false
-  },
+  verificationCode: String,
+  verificationCodeExpires: Date,
+  resetPasswordCode: String,
+  resetPasswordExpires: Date,
   createdAt: {
     type: Date,
     default: Date.now
@@ -55,13 +72,25 @@ const userSchema = new Schema({
 }, {
   timestamps: true,
   strict: true,
-  strictQuery: true
+  strictQuery: true,
+  collection: 'users' // Koleksiyon adını açıkça belirt
 });
 
 // Email için index oluştur
 userSchema.index({ email: 1 }, { unique: true });
 
 // Modeli oluşturmadan önce koleksiyonun varlığını kontrol et
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+let User: mongoose.Model<IUser>;
+
+// Modeli oluştur
+try {
+  // Önce mevcut modeli temizle
+  mongoose.deleteModel('User');
+} catch (error) {
+  // Model zaten silinmiş olabilir, hatayı yoksay
+}
+
+// Yeni model oluştur
+User = mongoose.model<IUser>('User', userSchema);
 
 export default User;

@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { FaInstagram, FaLinkedin, FaDiscord, FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import { FaInstagram, FaLinkedin, FaDiscord, FaEnvelope, FaMapMarkerAlt, FaPhone, FaFacebook, FaTwitter } from 'react-icons/fa';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -56,15 +56,39 @@ export default function ContactPage() {
       title: 'E-posta',
       value: 'info@kavun.org',
       href: 'mailto:info@kavun.org'
+    },
+    {
+      icon: FaPhone,
+      title: 'Telefon',
+      value: '+90 (555) 123 4567',
+      href: 'tel:+90 (555) 123 4567'
+    },
+    {
+      icon: FaMapMarkerAlt,
+      title: 'Adres',
+      value: 'Teknokent, Yıldız Teknik Üniversitesi\nDavutpaşa Kampüsü, Esenler/İstanbul',
+      href: 'https://www.google.com/maps/place/Y%C4%B1ld%C4%B1z+Teknik+%C3%9Cniversitesi/@41.0605556,28.9877778,17z/data=!3m1!4b1!4m5!3m4!1s0x14cab8f9a8a5a5a5:0x6a6a6a6a6a6a6a6a!8m2!3d41.0605556!4d28.9900001'
     }
   ];
 
   const socialLinks = [
     { 
+      icon: FaFacebook, 
+      href: 'https://www.facebook.com/codesmedipol/', 
+      label: 'Facebook',
+      description: 'Etkinliklerimizi ve güncel gelişmeleri takip edin'
+    },
+    { 
+      icon: FaTwitter, 
+      href: 'https://twitter.com/codesmedipol', 
+      label: 'Twitter',
+      description: 'Profesyonel ağımıza katılın ve kariyer fırsatlarını keşfedin'
+    },
+    { 
       icon: FaInstagram, 
       href: 'https://www.instagram.com/codesmedipol/', 
       label: 'Instagram',
-      description: 'Etkinliklerimizi ve güncel gelişmeleri takip edin'
+      description: 'Topluluğumuza katılın ve diğer üyelerle etkileşime geçin'
     },
     { 
       icon: FaLinkedin, 
@@ -81,36 +105,46 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-24 relative overflow-hidden">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-200 via-emerald-100 to-emerald-200" />
+    <div className="min-h-screen bg-gradient-to-b from-[#FFB996] to-[#FFECEC] py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-bold text-[#994D1C] text-center mb-12">
+          İletişim
+        </h1>
 
-      {/* Background Effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-emerald-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob" />
-        <div className="absolute top-1/3 -right-48 w-96 h-96 bg-emerald-500/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
-      </div>
+        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* İletişim Bilgileri */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-[#994D1C] mb-6">
+                Bize Ulaşın
+              </h2>
+              
+              {contactInfo.map((info) => (
+                <div key={info.title} className="flex items-center space-x-4 text-[#6B3416]">
+                  <info.icon className="text-2xl text-[#FF8B5E]" />
+                  <div>
+                    <h3 className="font-semibold">{info.title}</h3>
+                    <p>{info.value}</p>
+                  </div>
+                </div>
+              ))}
 
-      <div className="container mx-auto px-4 py-12 relative">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-5xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800"
-        >
-          Bizimle İletişime Geçin
-        </motion.h1>
+              <div className="pt-6">
+                <h3 className="font-semibold text-[#6B3416] mb-4">Sosyal Medya</h3>
+                <div className="flex space-x-4">
+                  {socialLinks.map((link) => (
+                    <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="text-[#FF8B5E] hover:text-[#994D1C] transition-colors">
+                      <link.icon className="text-2xl" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-emerald-50/80 backdrop-blur-sm p-8 rounded-xl border border-emerald-200 shadow-lg"
-          >
+            {/* İletişim Formu */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-emerald-900 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-[#6B3416]">
                   Ad Soyad
                 </label>
                 <input
@@ -120,14 +154,13 @@ export default function ContactPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 text-emerald-900 placeholder-emerald-400"
-                  placeholder="Adınız Soyadınız"
+                  className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-emerald-900 mb-2">
-                  E-posta
+                <label htmlFor="email" className="block text-sm font-medium text-[#6B3416]">
+                  Email
                 </label>
                 <input
                   type="email"
@@ -136,13 +169,12 @@ export default function ContactPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 text-emerald-900 placeholder-emerald-400"
-                  placeholder="ornek@email.com"
+                  className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
                 />
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-emerald-900 mb-2">
+                <label htmlFor="subject" className="block text-sm font-medium text-[#6B3416]">
                   Konu
                 </label>
                 <input
@@ -152,13 +184,12 @@ export default function ContactPage() {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 text-emerald-900 placeholder-emerald-400"
-                  placeholder="Mesajınızın konusu"
+                  className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
                 />
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-emerald-900 mb-2">
+                <label htmlFor="message" className="block text-sm font-medium text-[#6B3416]">
                   Mesaj
                 </label>
                 <textarea
@@ -168,20 +199,16 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   rows={4}
-                  className="w-full px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 text-emerald-900 placeholder-emerald-400 resize-none"
-                  placeholder="Mesajınız..."
-                />
+                  className="mt-1 block w-full rounded-md border-[#FFB996] shadow-sm focus:border-[#FF8B5E] focus:ring focus:ring-[#FF8B5E] focus:ring-opacity-50"
+                ></textarea>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-emerald-600 to-emerald-500 text-emerald-50 py-3 px-4 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-[#FF8B5E] to-[#FFB996] text-white font-semibold py-3 px-6 rounded-md hover:from-[#994D1C] hover:to-[#FF8B5E] transition-all duration-300 shadow-md hover:shadow-lg"
               >
-                <div className="absolute inset-0 bg-emerald-400/20 transform -skew-x-12 group-hover:translate-x-full transition-transform duration-500" />
-                <span className="relative">
-                  {loading ? 'Gönderiliyor...' : 'Gönder'}
-                </span>
+                {loading ? 'Gönderiliyor...' : 'Gönder'}
               </button>
 
               {success && (
@@ -204,62 +231,7 @@ export default function ContactPage() {
                 </motion.p>
               )}
             </form>
-          </motion.div>
-
-          {/* Contact Info & Social Links */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-12"
-          >
-            {/* Contact Info */}
-            <div className="grid gap-8">
-              {contactInfo.map((info) => (
-                <a
-                  key={info.title}
-                  href={info.href}
-                  className="group flex items-center p-6 bg-emerald-50/80 backdrop-blur-sm rounded-xl border border-emerald-200 transition-all duration-300 hover:shadow-lg"
-                >
-                  <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-emerald-50">
-                    <info.icon className="text-2xl" />
-                  </div>
-                  <div className="ml-6">
-                    <p className="text-sm font-medium text-emerald-600">{info.title}</p>
-                    <p className="text-lg font-semibold text-emerald-900 group-hover:text-emerald-700 transition-colors duration-300">
-                      {info.value}
-                    </p>
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            {/* Social Links */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-emerald-900">Bizi Takip Edin</h2>
-              <div className="grid gap-6">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center p-6 bg-emerald-50/80 backdrop-blur-sm rounded-xl border border-emerald-200 transition-all duration-300 hover:shadow-lg"
-                  >
-                    <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-emerald-50">
-                      <link.icon className="text-2xl" />
-                    </div>
-                    <div className="ml-6">
-                      <p className="text-lg font-semibold text-emerald-900 group-hover:text-emerald-700 transition-colors duration-300">
-                        {link.label}
-                      </p>
-                      <p className="text-sm text-emerald-600">{link.description}</p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

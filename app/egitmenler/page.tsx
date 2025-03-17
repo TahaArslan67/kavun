@@ -2,16 +2,74 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { FaChalkboardTeacher, FaGraduationCap, FaStar } from 'react-icons/fa';
 
 export default function InstructorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
+  const instructors = [
+    {
+      name: "Dr. Ahmet Yılmaz",
+      title: "Yazılım Geliştirme Uzmanı",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.8,
+      courses: 12,
+      students: 2500,
+      expertise: ["Python", "Machine Learning", "Web Development"]
+    },
+    {
+      name: "Prof. Ayşe Demir",
+      title: "Veri Bilimi Uzmanı",
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.9,
+      courses: 8,
+      students: 1800,
+      expertise: ["Data Science", "Deep Learning", "AI"]
+    },
+    {
+      name: "Mehmet Kaya",
+      title: "Frontend Geliştirici",
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.7,
+      courses: 15,
+      students: 3200,
+      expertise: ["React", "Vue.js", "UI/UX"]
+    },
+    {
+      name: "Zeynep Arslan",
+      title: "Backend Geliştirici",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.8,
+      courses: 10,
+      students: 2100,
+      expertise: ["Node.js", "Django", "Database Design"]
+    },
+    {
+      name: "Can Özkan",
+      title: "Mobil Uygulama Geliştirici",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.6,
+      courses: 6,
+      students: 1500,
+      expertise: ["React Native", "Flutter", "iOS Development"]
+    },
+    {
+      name: "Elif Yıldız",
+      title: "DevOps Mühendisi",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      rating: 4.9,
+      courses: 7,
+      students: 1900,
+      expertise: ["Docker", "Kubernetes", "CI/CD"]
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#FFF5F0] pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-[#FFB996] to-[#FFECEC] py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-[#6B3416] mb-4">
+          <h1 className="text-4xl font-bold text-[#994D1C] mb-4">
             Eğitmen Bul
           </h1>
           <p className="text-lg text-[#994D1C] max-w-2xl mx-auto">
@@ -65,42 +123,53 @@ export default function InstructorsPage() {
 
         {/* Instructors Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Sample Instructor Card */}
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {instructors.map((instructor, index) => (
             <div
-              key={i}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+              key={index}
+              className="bg-white rounded-lg shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
             >
-              <div className="relative h-48">
-                <Image
-                  src={`https://source.unsplash.com/random/400x300?teacher=${i}`}
-                  alt="Eğitmen"
-                  fill
-                  className="object-cover"
+              <div className="aspect-w-16 aspect-h-9">
+                <img
+                  src={instructor.image}
+                  alt={instructor.name}
+                  className="object-cover w-full h-48"
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-[#6B3416] mb-2">
-                  Eğitmen {i}
-                </h3>
-                <p className="text-[#994D1C] mb-4">
-                  Matematik, Fizik
-                </p>
-                <div className="flex items-center text-[#FFB996] mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
-                      key={star}
-                      className="w-5 h-5 fill-current"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <span className="ml-2 text-[#994D1C]">5.0 (42 değerlendirme)</span>
+                <h2 className="text-2xl font-bold text-[#994D1C] mb-2">
+                  {instructor.name}
+                </h2>
+                <p className="text-[#6B3416] mb-4">{instructor.title}</p>
+                
+                <div className="flex items-center mb-4">
+                  <FaStar className="text-[#FF8B5E] mr-1" />
+                  <span className="text-[#6B3416]">{instructor.rating} (120+ değerlendirme)</span>
                 </div>
-                <button className="w-full bg-gradient-to-r from-[#FFB996] to-[#FF8B5E] text-[#6B3416] font-medium px-4 py-2 rounded-lg 
-                  transition-all duration-300 hover:shadow-lg hover:shadow-[#FFB996]/20 hover:scale-[1.02] active:scale-[0.98]">
-                  İletişime Geç
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center">
+                    <FaChalkboardTeacher className="text-[#FF8B5E] mr-2" />
+                    <span className="text-[#6B3416]">{instructor.courses} aktif kurs</span>
+                  </div>
+                  <div className="flex items-center">
+                    <FaGraduationCap className="text-[#FF8B5E] mr-2" />
+                    <span className="text-[#6B3416]">{instructor.students} öğrenci</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {instructor.expertise.map((exp, i) => (
+                    <span
+                      key={i}
+                      className="inline-block bg-[#FFE5D9] text-[#994D1C] px-3 py-1 rounded-full text-sm mr-2 mb-2"
+                    >
+                      {exp}
+                    </span>
+                  ))}
+                </div>
+
+                <button className="w-full mt-6 bg-gradient-to-r from-[#FF8B5E] to-[#FFB996] text-white font-semibold py-3 px-6 rounded-md hover:from-[#994D1C] hover:to-[#FF8B5E] transition-all duration-300 shadow-md hover:shadow-lg">
+                  Profili İncele
                 </button>
               </div>
             </div>
