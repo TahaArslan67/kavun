@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { universities } from '@/data/universities';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/src/components/Navbar';
 
 export default function Home() {
   const router = useRouter();
